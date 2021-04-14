@@ -1,0 +1,9 @@
+{
+  "name": "scootys-armor-swap",
+  "version": "0.1.0",
+  "title": "Scooty's Armor Swap",
+  "author": "Scooty McDaniels",
+  "factorio_version": "1.1.31",
+  "dependencies": ["base >= 1.1"],
+  "description": "Adds a key binding (default: \\) that cycling betwen armors in inventory, allowing for rapid swapping to armor specialized for different purposes such as construction, combat, movement speed, or survival in space."
+}
