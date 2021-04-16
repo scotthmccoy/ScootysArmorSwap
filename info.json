@@ -5,5 +5,5 @@
   "author": "Scooty McDaniels",
   "factorio_version": "1.1",
   "dependencies": ["base >= 1.1"],
-  "description": "Adds a key binding (default: the "\\" key) that equips the next armor in your inventory and sets your player color to the color that was last used with that armor. This allows for armor dying and rapid swapping among armors specialized for different purposes. For example, you could have a blue armor specialized for movement speed, an orange armor specialized for construction, a red armor specialized for combat and a white one for surival in space."
+  "description": "Adds a key binding (default: the \"\\\" key) that equips the next armor in your inventory and sets your player color to the color that was last used with that armor. Rapidly cyle among color-coded armors specialized for different purposes!"
 }
