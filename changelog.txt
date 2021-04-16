@@ -1,0 +1,25 @@
+---------------------------------------------------------------------------------------------------
+Version: 0.1.0
+  Features: 
+    - Mod is working!
+  
+  Known issues: 
+    - The Equip Next Armor key is not set to backslash (the "\" key) at first launch. This can be set under Settings -> Controls -> Mods
+    - Under Settings -> Controls -> Mods, an error message "Unknown key: controls.scootys-armor-swap" is displayed
+---------------------------------------------------------------------------------------------------
+Version: 0.1.1
+  Features: 
+    - Thumbnail added
+    - Description updated
+    - Uploaded to mod portal
+---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+  Features: 
+    - Armor Swap will now associate player colors with armors. Select a player color while wearing a particular armor and Armor Swap will restore it when you switch back to that armor using the mod.
+    - changelog.txt added
+    - Thumbnail gaucheness reduction of 15, potentially 20%
+
+  Bug Fixes: 
+    - The Equip Next Armor key should now be properly set to backslash (the "\" key) at first launch.
+    - Fixed crashes related to having no armor equipped, no armor in inventory, etc.
+    - Fixed localization error in Settings -> Controls -> Mods 

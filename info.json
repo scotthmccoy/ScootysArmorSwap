@@ -1,9 +1,9 @@
 {
   "name": "scootys-armor-swap",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "title": "Scooty's Armor Swap",
   "author": "Scooty McDaniels",
   "factorio_version": "1.1",
   "dependencies": ["base >= 1.1"],
-  "description": "Adds a key binding that cycles through armors in inventory allowing for rapid swapping among armors specialized for different purposes such as construction, combat, movement speed, or survival in space."
+  "description": "Adds a key binding (default: the "\\" key) that equips the next armor in your inventory and sets your player color to the color that was last used with that armor. This allows for armor dying and rapid swapping among armors specialized for different purposes. For example, you could have a blue armor specialized for movement speed, an orange armor specialized for construction, a red armor specialized for combat and a white one for surival in space."
 }
