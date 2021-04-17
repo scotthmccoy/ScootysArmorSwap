@@ -8,6 +8,7 @@ local ScootysArmorSwap = {}
 function ScootysArmorSwap.getNextArmorItemNumber(player) 
 	wornArmor = player.get_inventory(defines.inventory.character_armor)[1]
 	mainInventory = player.get_main_inventory()
+	freeSlots = mainInventory.count_empty_stacks()
 
 	armorItemNumbers = {}
 
@@ -17,7 +18,11 @@ function ScootysArmorSwap.getNextArmorItemNumber(player)
 		stack = mainInventory[i]	
 		if stack.valid_for_read then 
 			if stack.is_armor then
-				table.insert(armorItemNumbers, stack.item_number)
+				-- If equipping this armor would cause the player to drop items, don't consider it.
+				inventorySizeBonusChange = stack.prototype.inventory_size_bonus - wornArmor.prototype.inventory_size_bonus
+				if freeSlots + inventorySizeBonusChange >= 0 then
+					table.insert(armorItemNumbers, stack.item_number)
+				end
 		  	end
 		end
 	end
@@ -29,13 +34,13 @@ function ScootysArmorSwap.getNextArmorItemNumber(player)
 
 	table.sort(armorItemNumbers)
 
-	-- If not wearing any armor, equip the first
+	-- If not wearing any armor treat the item_number as 0
 	wornArmorItemNumber = 0
 	if wornArmor.is_armor then
 		wornArmorItemNumber = wornArmor.item_number
 	end
 
-	-- Find the next armor 
+	-- Find the next armor in sequence by comparing item numbers
 	for i=1, #armorItemNumbers do
 		if wornArmorItemNumber < armorItemNumbers[i] then
 			return armorItemNumbers[i]
@@ -104,3 +109,30 @@ function ScootysArmorSwap.on_init(event)
 end
 Event.addListener("on_init", ScootysArmorSwap.on_init, true)
 
+
+-- Helpful for debugging
+--[[
+
+/c	local player = game.player
+player.insert{name="power-armor-mk2", count = 1}
+local p_armor = player.get_inventory(5)[1].grid
+	p_armor.put({name = "fusion-reactor-equipment"})
+	p_armor.put({name = "fusion-reactor-equipment"})
+	p_armor.put({name = "fusion-reactor-equipment"})
+	p_armor.put({name = "exoskeleton-equipment"})
+	p_armor.put({name = "exoskeleton-equipment"})
+	p_armor.put({name = "exoskeleton-equipment"})
+	p_armor.put({name = "exoskeleton-equipment"})
+	p_armor.put({name = "energy-shield-mk2-equipment"})
+	p_armor.put({name = "energy-shield-mk2-equipment"})
+	p_armor.put({name = "personal-roboport-mk2-equipment"})
+	p_armor.put({name = "night-vision-equipment"})
+	p_armor.put({name = "battery-mk2-equipment"})
+	p_armor.put({name = "battery-mk2-equipment"})
+
+
+player.insert{name="iron-plate", count = 5000}
+
+player.print(serpent.block(global) )
+
+]]

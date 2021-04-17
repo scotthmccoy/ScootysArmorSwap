@@ -23,3 +23,7 @@ Version: 0.2.0
     - The Equip Next Armor key should now be properly set to backslash (the "\" key) at first launch.
     - Fixed crashes related to having no armor equipped, no armor in inventory, etc.
     - Fixed localization error in Settings -> Controls -> Mods 
+---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+  Features:
+    - Armor Swap will no skip any armors in your inventory that would cause you to drop items on the ground. 
