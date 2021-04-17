@@ -26,4 +26,8 @@ Version: 0.2.0
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.0
   Features:
-    - Armor Swap will no skip any armors in your inventory that would cause you to drop items on the ground. 
+    - Armor Swap will now skip any armors in your inventory that would cause you to drop items on the ground. 
+---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+  Bug Fixes:
+    - If player inventory contained gaps armor swap would stop looking for armors after encountering the first gap. Thanks to user gap_ for discovering this.

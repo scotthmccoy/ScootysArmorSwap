@@ -57,8 +57,6 @@ function ScootysArmorSwap.findArmorByItemNumber(inventory, armorItemNumber)
 			if stack.is_armor and stack.item_number == armorItemNumber then
 				return stack
 		  	end
-		else 
-			break
 		end
 	end
 	return nil
