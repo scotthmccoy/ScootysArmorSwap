@@ -17,7 +17,7 @@ Version: 0.2.0
   Features: 
     - Armor Swap will now associate player colors with armors. Select a player color while wearing a particular armor and Armor Swap will restore it when you switch back to that armor using the mod.
     - changelog.txt added
-    - Thumbnail gaucheness reduction of 15, potentially 20%
+    - Thumbnail gaucheness reduction of 15%, potentially even 20%
 
   Bug Fixes: 
     - The Equip Next Armor key should now be properly set to backslash (the "\" key) at first launch.
@@ -31,3 +31,13 @@ Version: 1.0.0
 Version: 1.1.0
   Bug Fixes:
     - If player inventory contained gaps armor swap would stop looking for armors after encountering the first gap. Thanks to user gap_ for discovering this.
+---------------------------------------------------------------------------------------------------
+Version: 1.2.0
+  Features:
+    - Some mods delete and re-create the player and their inventory under some circumstances which made SAS unable to find the armors in the cache based on their item number. Added a backup search for armor based on item name and grid contents to compensate for this.
+    - Added a "clear color cache" key (default: Control + \) to delete the color cache as it can grow large in multiplayer or with lots of armors.
+    - Updated Russian translation. I hope it's good!
+
+  Bug Fixes:
+    - Re-fixed crash when no armor equipped or no armor in inventory. Thanks to user sporefreak for discovering this.
+
