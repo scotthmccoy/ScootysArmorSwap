@@ -219,7 +219,11 @@ end
 function ScootysArmorSwap.makeArmorBackupKey(luaItemStackArmor)
 
 	-- concat the armor's name to the contents of its grid
-	local hashInput = luaItemStackArmor.name .. dump(luaItemStackArmor.grid.get_contents())
+	gridContents = ""
+	if luaItemStackArmor.grid ~= nil then
+		gridContents = dump(luaItemStackArmor.grid.get_contents())
+	end
+	local hashInput = luaItemStackArmor.name .. gridContents
 
 	-- Hash the string
 	return hash(hashInput)

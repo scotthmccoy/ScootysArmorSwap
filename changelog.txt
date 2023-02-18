@@ -40,4 +40,8 @@ Version: 1.2.0
 
   Bug Fixes:
     - Re-fixed crash when no armor equipped or no armor in inventory. Thanks to user sporefreak for discovering this.
+---------------------------------------------------------------------------------------------------
+Version: 1.2.1
 
+  Bug Fixes:
+    - Fixed crash introduced in 1.2.0 when cycling armors with no grid.
