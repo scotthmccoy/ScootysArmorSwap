@@ -2,5 +2,9 @@
 DIRECTORY=$(dirname "$0")
 cd "$DIRECTORY"/..
 
-zip -r scootys-armor-swap_1.1.0.zip scootys-armor-swap
+fileName="scootys-armor-swap_1.2.2.zip"
+zip -r $fileName scootys-armor-swap -x '*.git*'
+cp $fileName /Users/scottmccoy/Library/Application\ Support/factorio/mods/
+
+echo "Upload to https://mods.factorio.com/mod/scootys-armor-swap/downloads/edit"
 say "Done"
