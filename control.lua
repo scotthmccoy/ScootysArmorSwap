@@ -1,3 +1,6 @@
+-- TODO: make use of this in logging
+timeOfLastUpdate={year=1970, month=1, day=1, hour=0}
+
 --control.lua
 require('event')
 
@@ -6,7 +9,7 @@ log("Scooty's Armor Swap Setup")
 local ScootysArmorSwap = {}
 
 function ScootysArmorSwap.on_init(event)
-  log("Scooty's Armor Swap")
+  log("Scooty's Armor Swap on_init")
 end
 
 ------------
@@ -47,32 +50,47 @@ function pLog(player, message, obj)
     message = message .. ": " .. type(obj) .. ": " .. dump(obj)
   end
 
+  log(player)
   player.print(message)
 end
 
-
 -----------------------------
--- Key Press Event Handlers
+-- Event Handlers
 -----------------------------
 
-function ScootysArmorSwap.keyPressHandlerEquipNextArmor(event)
+function ScootysArmorSwap.onKeyPressHandlerEquipNextArmorHandler(event)
   log("keyPressHandlerEquipNextArmor")
-  if event.player_index and game.players[event.player_index] and game.players[event.player_index].connected then
-    local luaPlayer = game.players[event.player_index]
-    if luaPlayer.character then
-      armorItemNumber = ScootysArmorSwap.getNextArmorItemNumber(luaPlayer)
+  log(debug.getinfo(1, "n").name)
 
-      if armorItemNumber ~= nil then
-        ScootysArmorSwap.equipArmorWithItemNumber(luaPlayer, armorItemNumber)
-      end
-    end
+
+  luaPlayer = getLuaPlayerFromEvent(event)
+  if luaPlayer == nil then
+  	return
   end
+
+  armorItemNumber = ScootysArmorSwap.getNextArmorItemNumber(luaPlayer)
+
+  if armorItemNumber ~= nil then
+    ScootysArmorSwap.equipArmorWithItemNumber(luaPlayer, armorItemNumber)
+  end
+
 end
 
-function ScootysArmorSwap.KeyPressHandlerClearCache(event)
+function ScootysArmorSwap.onKeyPressHandlerClearCacheHandler(event)
   log("KeyPressHandlerClearCache")
   global.armorColors = {}
   global.armorColorsBackup = {}
+end
+
+function ScootysArmorSwap.onPlayerArmorInventoryChangedHandler(event)
+  log("onPlayerArmorInventoryChangedHandler")
+
+  luaPlayer = getLuaPlayerFromEvent(event)
+  if luaPlayer == nil then
+  	return
+  end
+
+  pLog(player, "Inventory Changed")
 end
 
 ----------------------
@@ -247,14 +265,28 @@ function hash(o)
   return h
 end
 
+function getLuaPlayerFromEvent(event)
+  if event.player_index and game.players[event.player_index] and game.players[event.player_index].connected then
+    local luaPlayer = game.players[event.player_index]
+    if luaPlayer.character then
+    	return luaPlayer
+    end
+  end
+
+  return nil
+end
+
 --------------------
 -- Event Listeners 
 --------------------
 
 -- Note - these must be added last, after the funcs are defined
 Event.addListener("on_init", ScootysArmorSwap.on_init, true)
-Event.addListener("scootys-armor-swap-equip-next-armor", ScootysArmorSwap.keyPressHandlerEquipNextArmor)
-Event.addListener("scootys-armor-swap-clear-cache", ScootysArmorSwap.KeyPressHandlerClearCache)
+Event.addListener("scootys-armor-swap-equip-next-armor", ScootysArmorSwap.onKeyPressHandlerEquipNextArmorHandler)
+Event.addListener("scootys-armor-swap-clear-cache", ScootysArmorSwap.onKeyPressHandlerClearCacheHandler)
+Event.addListener(defines.events.on_player_armor_inventory_changed, ScootysArmorSwap.onPlayerArmorInventoryChangedHandler)
+
+
 
 -- Helpful for debugging
 --[[
