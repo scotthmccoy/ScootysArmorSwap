@@ -68,8 +68,19 @@ end
 function onPlayerArmorInventoryChangedHandler(event)
 	Logging.sasLog("⚡️ onPlayerArmorInventoryChangedHandler")
 
-	-- Change the player's color based on the new armor  
+	luaPlayer = getLuaPlayerFromEvent(event)
+	if luaPlayer == nil then
+		return
+	end
+
+	-- Change the player's color based on the new armor
 	dyePlayerFromArmor(luaPlayer)
+
+	-- Record the current armor's color for the next time it is equipped
+	-- Note: this is to update the fuzzy match, since at the time of this writing
+	-- it is suddenly obvious that that the fuzzy match is the one that is used most 
+	-- frequently due to jetpack creating new item IDs.
+	dyeArmorFromPlayer(luaPlayer)	
 end
 
 ----------------------
@@ -154,14 +165,14 @@ function getArmorInfo(luaPlayer)
 
 	--[[
 	Item numbers are usually a very stable way of "primary key"ing an item.
-	However, some mods that teleport players like our beloved SE will destroy and re-create the player instead of physically transporting 
-	them between surfaces. This has the unfortunate side effect of creating new item numbers for that player's armors.
+	However, some mods that teleport players like our beloved SE and Jetpack will destroy and re-create the player, which has the 
+	unfortunate side effect of creating new item numbers for that player's armors.
 	
 	Given that, we make a secondary key by hashing the armor's name plus its grid contents.
 
 	This is a much fuzzier match and will cause collisions if armor types and grids are exactly the same. 
 	For example, if you and another player both have a power armor mk2 with nothing but jetpacks and theirs is red and yours is blue,
-	they will both get the same hash. 
+	they will both get the same hash.
 
 	These collisions are usually not the worst user experience since we don't usually care about dying armors with no grid or keeping armors
 	with the exact same grid visually distinct, but it can get confusing.
@@ -209,6 +220,7 @@ function getNextArmorItemNumber(luaPlayer)
 	end
 
 	-- Find all armors in inventory that wouldnt cause you to drop items if they were equipped
+	-- TODO: Refactor this to calculate a minimum number of free slots
 	for i=1, #luaInventory do
 		luaItemStack = luaInventory[i]  
 		if luaItemStack.valid_for_read then 
@@ -218,13 +230,13 @@ function getNextArmorItemNumber(luaPlayer)
 				if freeSlots + inventorySizeBonusChange >= 0 then
 					table.insert(armorItemNumbers, luaItemStack.item_number)
 				end
-				end
+			end
 		end
 	end
 
-	-- Bail if there are no armors in inventory
+	-- Bail if there are no valid armors in inventory
 	if #armorItemNumbers == 0 then
-		pLog(luaPlayer, "No valid armors in inventory")
+		Logging.pLog(luaPlayer, "No valid armors in inventory")
 		return nil
 	end
 
@@ -243,20 +255,43 @@ end
 -- Swaps the the currently equipped armor with the specified item number in the inventory and updates player color
 function equipArmorWithItemNumber(luaPlayer, armorItemNumber) 
 	Logging.sasLog()
+
+	mainInventory = luaPlayer.get_main_inventory()
+
 	--Get the armors
 	luaItemStackWornArmor = luaPlayer.get_inventory(defines.inventory.character_armor)[1]
-	luaItemStackNewArmor = findArmorByItemNumber(luaPlayer.get_main_inventory(), armorItemNumber)
+	luaItemStackNewArmor = findArmorByItemNumber(mainInventory, armorItemNumber)
 
-	if luaItemStackNewArmor == nil or not luaItemStackNewArmor.valid_for_read then
+	if luaItemStackNewArmor == nil then
 		Logging.sasLog("Next armor can't be read")
 		return
 	end
+
+
+	putWornArmorHere = mainInventory.find_empty_stack(luaItemStackWornArmor.name)
+	if putWornArmorHere == nil then
+		Logging.sasLog("Nowhere to put worn armor")
+		return
+	end
+
 
 	--Switch armors
 	--Normally, swapping armor briefly removes inventory bonus slots which can cause the player
 	--to drop items on the ground. Briefly expand the inventory to prevent this.
 	luaPlayer.character_inventory_slots_bonus = luaPlayer.character_inventory_slots_bonus + 1000
-	luaItemStackNewArmor.swap_stack(luaItemStackWornArmor)
+
+	
+	if not luaItemStackWornArmor.swap_stack(putWornArmorHere) then
+		Logging.sasLog("Taking off armor failed")
+		return
+	end
+
+	if not luaItemStackNewArmor.swap_stack(luaItemStackWornArmor) then
+		Logging.sasLog("Putting on new armor failed")
+		return
+	end
+
+	-- Reset character_inventory_slots_bonus 
 	luaPlayer.character_inventory_slots_bonus = luaPlayer.character_inventory_slots_bonus - 1000  
 end
 
@@ -265,10 +300,8 @@ function findArmorByItemNumber(luaInventory, armorItemNumber)
 	Logging.sasLog()
 	for i=1, #luaInventory do
 		luaItemStack = luaInventory[i]  
-		if luaItemStack.valid_for_read then 
-			if luaItemStack.is_armor and luaItemStack.item_number == armorItemNumber then
-				return luaItemStack
-				end
+		if luaItemStack.is_armor and luaItemStack.item_number == armorItemNumber then
+			return luaItemStack
 		end
 	end
 	return nil

@@ -4,7 +4,7 @@ Version: 0.1.0
     - Mod is working!
   
   Known issues: 
-    - The Equip Next Armor key is not set to backslash (the "\" key) at first launch. This can be set under Settings -> Controls -> Mods
+    - The Equip Next Armor key is now set to backslash (the "\" key) at first launch. This can be set under Settings -> Controls -> Mods
     - Under Settings -> Controls -> Mods, an error message "Unknown key: controls.scootys-armor-swap" is displayed
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.1
@@ -45,3 +45,12 @@ Version: 1.2.1
 
   Bug Fixes:
     - Fixed crash introduced in 1.2.0 when cycling armors with no grid.
+---------------------------------------------------------------------------------------------------
+Version: 1.3.0
+
+  Features:
+    - Now works with locked slots. Thanks to user Zacous for discovering this.
+
+  Bug Fixes:
+    - Player coloring updates now occur any time a player changes armor instead of only when using the Equip Next Armor key. This should be particularly useful when equipping emergency armor used for corpse runs.
+    - Most "Fuzzy Match" issues have been fixed, such as activating a jetpack cycling identical armors with a different color.
