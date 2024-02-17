@@ -1,25 +1,25 @@
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.0
-  Features: 
+  Features:
     - Mod is working!
   
-  Known issues: 
+  Known issues:
     - The Equip Next Armor key is now set to backslash (the "\" key) at first launch. This can be set under Settings -> Controls -> Mods
     - Under Settings -> Controls -> Mods, an error message "Unknown key: controls.scootys-armor-swap" is displayed
 ---------------------------------------------------------------------------------------------------
 Version: 0.1.1
-  Features: 
+  Features:
     - Thumbnail added
     - Description updated
     - Uploaded to mod portal
 ---------------------------------------------------------------------------------------------------
 Version: 0.2.0
-  Features: 
+  Features:
     - Armor Swap will now associate player colors with armors. Select a player color while wearing a particular armor and Armor Swap will restore it when you switch back to that armor using the mod.
     - changelog.txt added
     - Thumbnail gaucheness reduction of 15%, potentially even 20%
 
-  Bug Fixes: 
+  Bug Fixes:
     - The Equip Next Armor key should now be properly set to backslash (the "\" key) at first launch.
     - Fixed crashes related to having no armor equipped, no armor in inventory, etc.
     - Fixed localization error in Settings -> Controls -> Mods 
@@ -54,3 +54,20 @@ Version: 1.3.0
   Bug Fixes:
     - Player coloring updates now occur any time a player changes armor instead of only when using the Equip Next Armor key. This should be particularly useful when equipping emergency armor used for corpse runs.
     - Most "Fuzzy Match" issues have been fixed, such as activating a jetpack cycling identical armors with a different color.
+---------------------------------------------------------------------------------------------------
+Version: 1.4.0
+
+  Features:
+    - Now updates player color when using a Jetpack (https://mods.factorio.com/mod/jetpack). Thanks to user naiad for discovering a fix to the Jetpack mod, and Jetpack mod contributor Quezler for suggesting a way to fix it locally instead.
+
+  Bug Fixes:
+    -- Fixed a crash. Thanks to user Eldrinn for reporting this.
+---------------------------------------------------------------------------------------------------
+Version: 1.4.1
+
+  Features:
+    -- Added exception handling in all event handling funcs. This should make this mod much less likely to cause crashes in the future. Thank you to naiad for suggesting this.
+
+  Bug Fixes:
+    -- Fixed a crash involving using a jetpack near a spaceship. Thanks to user naiad for reporting this.
+---------------------------------------------------------------------------------------------------    

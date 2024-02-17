@@ -35,33 +35,29 @@ function StringUtils.toString(val)
   	-- to the log.
   	-- Thankfully, almost all classes have an object_name field, typically inherited from LuaEntity or LuaPlayer
   	if type(val.__self) == 'userdata' then
-        ret = val.object_name
-        if ret then
-          	return "[Factorio." .. ret .. "]"
-        end
+	    objectName = val.object_name
+			ret = "[Factorio." .. objectName
+
+  		if objectName == "LuaItemStack" then
+  			ret = ret .. " ("
+				if val.valid_for_read then
+      		ret = ret .. val.name
+      	else
+      		ret = ret .. "empty"
+      	end
+
+      	ret = ret .. ")"
+      end
+
+      ret = ret .. "]"
+      return ret
   	end
 
     -- Uses https://github.com/pkulchenko/serpent
     return serpent.block(val)
-
-    -- Regular table
-    -- local ret = '{ '
-    -- for k,v in pairs(val) do
-    --   if type(k) ~= 'number' then 
-    --     k = '"'..k..'"' 
-    --   end
-    --   
-    --   -- Recursively convert values
-    --   ret = ret .. '['..k..'] = ' .. StringUtils.toString(v) .. ','
-    -- end
-
-    -- return ret .. '} '
-
   end
 
-
-
-
+  -- For non-tables, use tostring
   return tostring(val)
 end
 

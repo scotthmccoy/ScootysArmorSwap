@@ -37,50 +37,65 @@ The only legitimate uses of this event are these:
 ]]
 function on_load(event)
 	Logging.sasLog("⚡️ on_load")
-	Logging.sasLog("global.armorColors: " .. StringUtils.toString(global.armorColors))
-	Logging.sasLog("global.armorColorsBackup: " .. StringUtils.toString(global.armorColorsBackup))
+	Logging.sasLog("global.armorColors: " .. tablelength(global.armorColors) .. " entries")
+	Logging.sasLog("global.armorColorsBackup: " .. tablelength(global.armorColorsBackup) .. " entries")
 end
 
 
 function onKeyPressHandlerEquipNextArmorHandler(event)
-	Logging.sasLog("⚡️ onKeyPressHandlerEquipNextArmorHandler")
+	tryCatchPrint(
+		function()	
+			Logging.sasLog("⚡️ onKeyPressHandlerEquipNextArmorHandler")
 
-	-- Get the player or bail
-	luaPlayer = getLuaPlayerFromEvent(event)
-	if luaPlayer == nil then
-		return
-	end
+			-- Get the player or bail
+			luaPlayer = getLuaPlayerFromEvent(event)
+			if luaPlayer == nil then
+				return
+			end
 
-	-- Record the current armor's color for the next time it is equipped
-	dyeArmorFromPlayer(luaPlayer)
+			-- Record the current armor's color for the next time it is equipped
+			dyeArmorFromPlayer(luaPlayer)
 
-	-- Equip the next armor
-	equipNextArmor(luaPlayer)
+			-- Equip the next armor
+			equipNextArmor(luaPlayer)
+		end,
+		event
+	)
 end
 
 function onKeyPressHandlerClearCacheHandler(event)
-	Logging.sasLog("⚡️ onKeyPressHandlerClearCacheHandler")
-	global.armorColors = {}
-	global.armorColorsBackup = {}
-	Logging.pLog(getLuaPlayerFromEvent(event), "All Armors have been un-dyed")
+	tryCatchPrint(
+		function()
+			Logging.sasLog("⚡️ onKeyPressHandlerClearCacheHandler")
+			global.armorColors = {}
+			global.armorColorsBackup = {}
+			Logging.pLog(getLuaPlayerFromEvent(event), "All Armors have been un-dyed")
+		end,
+		event
+	)
 end
 
 function onPlayerArmorInventoryChangedHandler(event)
-	Logging.sasLog("⚡️ onPlayerArmorInventoryChangedHandler")
+	tryCatchPrint(
+		function()
+			Logging.sasLog("⚡️ onPlayerArmorInventoryChangedHandler")
 
-	luaPlayer = getLuaPlayerFromEvent(event)
-	if luaPlayer == nil then
-		return
-	end
+			luaPlayer = getLuaPlayerFromEvent(event)
+			if luaPlayer == nil then
+				return
+			end
 
-	-- Change the player's color based on the new armor
-	dyePlayerFromArmor(luaPlayer)
+			-- Change the player's color based on the new armor
+			dyePlayerFromArmor(luaPlayer)
 
-	-- Record the current armor's color for the next time it is equipped
-	-- Note: this is to update the fuzzy match, since at the time of this writing
-	-- it is suddenly obvious that that the fuzzy match is the one that is used most 
-	-- frequently due to jetpack creating new item IDs.
-	dyeArmorFromPlayer(luaPlayer)	
+			-- Record the current armor's color for the next time it is equipped
+			-- Note: this is to update the fuzzy match, since at the time of this writing
+			-- it is suddenly obvious that that the fuzzy match is the one that is used most 
+			-- frequently due to jetpack creating new item IDs.
+			dyeArmorFromPlayer(luaPlayer)
+		end, 
+		event
+	)
 end
 
 ----------------------
@@ -129,22 +144,24 @@ function dyePlayerFromArmor(luaPlayer)
 
 	-- Try primary key
 	colorNew = global.armorColors[armorInfo.primaryKey]
-	if colorNew ~= nil then 
-		Logging.sasLog("Found " .. armorInfo.primaryKey .. " in armorColors: " .. StringUtils.getKeys(global.armorColors) )
-		luaPlayer.color = colorNew
-		return
-	end
-	Logging.sasLog("Could not find next armor's key " .. armorInfo.primaryKey .. " in armorColors: " .. StringUtils.getKeys(global.armorColors) .. "")
-
+	
 	-- Try secondary key
-	colorNew = global.armorColorsBackup[armorInfo.secondaryKey]
-	if colorNew ~= nil then
-		Logging.sasLog("Found " .. armorInfo.secondaryKey .. " in armorColorsBackup: " .. StringUtils.getKeys(global.armorColorsBackup) )
-		luaPlayer.color = colorNew
+	if colorNew == nil then 
+		Logging.sasLog("Could not find next armor's key " .. armorInfo.primaryKey .. " in armorColors.")
+		colorNew = global.armorColorsBackup[armorInfo.secondaryKey]
+	end
+
+	-- Bail if not found
+	if colorNew == nil then
+		Logging.sasLog("Could not find next armor's backup key " .. armorInfo.secondaryKey .. " in armorColorsBackup. Bailing.")
 		return
 	end
 
-	Logging.sasLog("Could not find next armor's backup key " .. armorInfo.secondaryKey .. " in armorColorsBackup: " .. StringUtils.getKeys(global.armorColorsBackup) .. ". Bailing.")
+	-- Apply Color
+	luaPlayer.color = colorNew
+
+	-- Apply Jetpack tint fix
+	tryCatchPrint(jetpackTintFix, luaPlayer)
 end
 
 
@@ -262,18 +279,37 @@ function equipArmorWithItemNumber(luaPlayer, armorItemNumber)
 	luaItemStackWornArmor = luaPlayer.get_inventory(defines.inventory.character_armor)[1]
 	luaItemStackNewArmor = findArmorByItemNumber(mainInventory, armorItemNumber)
 
+	Logging.sasLog("Worn armor: " .. StringUtils.toString(luaItemStackWornArmor))
+	Logging.sasLog("New armor: " .. StringUtils.toString(luaItemStackNewArmor))
+
+	-- Validate armors
 	if luaItemStackNewArmor == nil then
-		Logging.sasLog("Next armor can't be read")
+		Logging.sasLog("New armor nil: " .. StringUtils.toString(luaItemStackNewArmor))
+		return
+	end
+
+	if luaItemStackWornArmor == nil then
+		Logging.sasLog("Worn armor nil: " .. StringUtils.toString(luaItemStackWornArmor))
+		return
+	end
+
+	-- If we're not wearing armor, simply put on the new one and bail
+	if not luaItemStackWornArmor.valid_for_read then
+		Logging.sasLog("Not wearing armor")
+		if not luaItemStackWornArmor.swap_stack(luaItemStackNewArmor) then
+			Logging.sasLog("Putting on new armor " .. luaItemStackNewArmor.name .. " failed")
+		end
 		return
 	end
 
 
 	putWornArmorHere = mainInventory.find_empty_stack(luaItemStackWornArmor.name)
+
+	-- Bail if full
 	if putWornArmorHere == nil then
 		Logging.sasLog("Nowhere to put worn armor")
 		return
-	end
-
+	end	
 
 	--Switch armors
 	--Normally, swapping armor briefly removes inventory bonus slots which can cause the player
@@ -292,7 +328,8 @@ function equipArmorWithItemNumber(luaPlayer, armorItemNumber)
 	end
 
 	-- Reset character_inventory_slots_bonus 
-	luaPlayer.character_inventory_slots_bonus = luaPlayer.character_inventory_slots_bonus - 1000  
+	luaPlayer.character_inventory_slots_bonus = luaPlayer.character_inventory_slots_bonus - 1000  		
+
 end
 
 -- Used by equipArmorWithItemNumber to convert the inventory item number to the actual item stack
@@ -318,6 +355,43 @@ function getLuaPlayerFromEvent(event)
 
 	Logging.sasLog("No player in event!!")
 	return nil
+end
+
+function jetpackTintFix(luaPlayer)
+	Logging.sasLog()
+
+	-- Since this talks to another mod, put it into a try catch
+	tryCatchPrint(
+		function()
+			if remote.interfaces["jetpack"] == nil then
+				Logging.sasLog("Jetpack not installed, bailing")
+				return
+			end
+
+			Logging.sasLog("Applying jetpack tint fix...")
+
+			local jetpack = remote.call("jetpack", "get_jetpack_for_character", {character=luaPlayer.character})
+			if jetpack ~= nil then
+				rendering.set_color(jetpack.animation_mask, jetpack.character.player and jetpack.character.player.color or jetpack.character.color)
+			end
+		end, 
+		luaPlayer
+	)
+end
+
+-- Wrapper for pcall
+function tryCatchPrint(aFunction, arg)
+	success, error = pcall(aFunction, arg)
+	if not success then
+		Logging.sasLog("🚨 Error: " .. StringUtils.toString(error))
+	end
+end
+
+-- Gets the number of entries in a table
+function tablelength(T)
+  local count = 0
+  for _ in pairs(T) do count = count + 1 end
+  return count
 end
 
 --------------------
