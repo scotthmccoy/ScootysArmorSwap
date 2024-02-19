@@ -1,5 +1,5 @@
 Logging = {
-  debugBuildTime = "DEBUG_BUILD_TIME"
+	debugBuildTime = "DEBUG_BUILD_TIME"
 } 
 
 --[[ sasLog
@@ -17,21 +17,21 @@ function Logging.sasLog(message)
 	debugInfo = debug.getinfo(2, "Sln") or {}
 
 	header = "🛡️  Deployed " 
-    .. (Logging.debugBuildTime or "[DEBUG_BUILD_TIME nil]") 
-    .. " " 
-    .. (debugInfo.source or "[source file nil]") 
-    .. " " 
-    .. (debugInfo.name or "[function name nil]")
-    .. " ["
-    .. (debugInfo.currentline or "[line number nil]")
-    .. "]"
+		.. (Logging.debugBuildTime or "[DEBUG_BUILD_TIME nil]") 
+		.. " " 
+		.. (debugInfo.source or "[source file nil]") 
+		.. " " 
+		.. (debugInfo.name or "[function name nil]")
+		.. " ["
+		.. (debugInfo.currentline or "[line number nil]")
+		.. "]"
 
-  -- Add a colon if neccessary
-  if message then
-    message = header .. ": " .. StringUtils.toString(message)
-  else
-    message = header
-  end
+	-- Add a colon if neccessary
+	if message then
+		message = header .. ": " .. StringUtils.toString(message)
+	else
+		message = header
+	end
 
 	-- Write to log
 	log(message)
@@ -40,15 +40,15 @@ end
 -- Prints to player console
 function Logging.pLog(luaPlayer, message)
 
-  message = StringUtils.toString(message)
-  Logging.sasLog("Messaging " .. StringUtils.toString(luaPlayer) .. " named \"" .. (luaPlayer.name or "nil") .. "\": " .. message)
+	message = StringUtils.toString(message)
+	Logging.sasLog("Messaging " .. StringUtils.toString(luaPlayer) .. " named \"" .. (luaPlayer.name or "nil") .. "\": " .. message)
 
-  if luaPlayer and luaPlayer.print then
-    -- Write to player screen
-    luaPlayer.print(message)
-  else
-    Logging.sasLog("Invalid luaPlayer")
-  end
+	if luaPlayer and luaPlayer.print then
+		-- Write to player screen
+		luaPlayer.print(message)
+	else
+		Logging.sasLog("Invalid luaPlayer")
+	end
 
 end
 

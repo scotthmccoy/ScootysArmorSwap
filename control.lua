@@ -16,9 +16,13 @@ LuaGameScript and the global table and can change anything about them that it de
 other events will be raised for the mod until it has finished this step.
 --]]
 function on_init(event)
-	Logging.sasLog("⚡️ on_init")
-	global.armorColors = {}
-	global.armorColorsBackup = {}
+	tryCatchPrint(
+		function()
+			Logging.sasLog("⚡️ on_init")
+			global.armorColors = {}
+			global.armorColorsBackup = {}
+		end
+	)
 end
 
 --[[
@@ -36,9 +40,13 @@ The only legitimate uses of this event are these:
 - Create local references to data stored in the global table.
 ]]
 function on_load(event)
-	Logging.sasLog("⚡️ on_load")
-	Logging.sasLog("global.armorColors: " .. tablelength(global.armorColors) .. " entries")
-	Logging.sasLog("global.armorColorsBackup: " .. tablelength(global.armorColorsBackup) .. " entries")
+	tryCatchPrint(
+		function()
+			Logging.sasLog("⚡️ on_load")
+			Logging.sasLog("global.armorColors: " .. tablelength(global.armorColors) .. " entries")
+			Logging.sasLog("global.armorColorsBackup: " .. tablelength(global.armorColorsBackup) .. " entries")
+		end
+	)
 end
 
 
@@ -390,7 +398,11 @@ end
 -- Gets the number of entries in a table
 function tablelength(T)
   local count = 0
-  for _ in pairs(T) do count = count + 1 end
+  if T then
+	  for _ in pairs(T) do 
+	  	count = count + 1 
+	  end
+	end
   return count
 end
 
