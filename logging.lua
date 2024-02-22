@@ -13,10 +13,16 @@ factorio doesn't recognize changes to info.json unless you re-launch the app.
 --]]
 function Logging.sasLog(message)
 
-	-- Get all debug info (See https://www.lua.org/pil/23.1.html)
-	debugInfo = debug.getinfo(2, "Sln") or {}
+  -- If DEBUG_BUILD_TIME hasn't been set then this is likely an install from the mod finder
+  -- Don't log anything to keep the log from filling up with debug messages
+  if Logging.debugBuildTime == "DEBUG_BUILD_TIME" then
+    return
+  end
 
-	header = "🛡️  Deployed " 
+	-- Get all debug info (See https://www.lua.org/pil/23.1.html)
+	local debugInfo = debug.getinfo(2, "Sln") or {}
+
+	local header = "🛡️  Deployed " 
 		.. (Logging.debugBuildTime or "[DEBUG_BUILD_TIME nil]") 
 		.. " " 
 		.. (debugInfo.source or "[source file nil]") 
@@ -40,7 +46,7 @@ end
 -- Prints to player console
 function Logging.pLog(luaPlayer, message)
 
-	message = StringUtils.toString(message)
+	local message = StringUtils.toString(message)
 	Logging.sasLog("Messaging " .. StringUtils.toString(luaPlayer) .. " named \"" .. (luaPlayer.name or "nil") .. "\": " .. message)
 
 	if luaPlayer and luaPlayer.print then

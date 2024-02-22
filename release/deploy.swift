@@ -40,7 +40,4 @@ let strDate = dateFormatter.string(from: Date())
 
 simpleShell("sed -i '' \"s/DEBUG_BUILD_TIME/\(strDate)/g\" ~/Library/Application\\ Support/factorio/mods/scootys-armor-swap/logging.lua")
 
-simpleShell("open ~/Library/Application\\ Support/factorio/mods")
-
-print("Reload the save and run the following: tail -f ~/Library/Application\\ Support/factorio/factorio-current.log")
 simpleShell("say done")

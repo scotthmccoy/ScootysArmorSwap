@@ -20,7 +20,6 @@ function on_init(event)
 		function()
 			Logging.sasLog("⚡️ on_init")
 			global.armorColors = {}
-			global.armorColorsBackup = {}
 		end
 	)
 end
@@ -44,7 +43,6 @@ function on_load(event)
 		function()
 			Logging.sasLog("⚡️ on_load")
 			Logging.sasLog("global.armorColors: " .. tablelength(global.armorColors) .. " entries")
-			Logging.sasLog("global.armorColorsBackup: " .. tablelength(global.armorColorsBackup) .. " entries")
 		end
 	)
 end
@@ -56,7 +54,7 @@ function onKeyPressHandlerEquipNextArmorHandler(event)
 			Logging.sasLog("⚡️ onKeyPressHandlerEquipNextArmorHandler")
 
 			-- Get the player or bail
-			luaPlayer = getLuaPlayerFromEvent(event)
+			local luaPlayer = getLuaPlayerFromEvent(event)
 			if luaPlayer == nil then
 				return
 			end
@@ -76,7 +74,6 @@ function onKeyPressHandlerClearCacheHandler(event)
 		function()
 			Logging.sasLog("⚡️ onKeyPressHandlerClearCacheHandler")
 			global.armorColors = {}
-			global.armorColorsBackup = {}
 			Logging.pLog(getLuaPlayerFromEvent(event), "All Armors have been un-dyed")
 		end,
 		event
@@ -88,7 +85,7 @@ function onPlayerArmorInventoryChangedHandler(event)
 		function()
 			Logging.sasLog("⚡️ onPlayerArmorInventoryChangedHandler")
 
-			luaPlayer = getLuaPlayerFromEvent(event)
+			local luaPlayer = getLuaPlayerFromEvent(event)
 			if luaPlayer == nil then
 				return
 			end
@@ -112,7 +109,7 @@ end
 function equipNextArmor(luaPlayer)
 	Logging.sasLog()
 
-	armorItemNumber = getNextArmorItemNumber(luaPlayer)
+	local armorItemNumber = getNextArmorItemNumber(luaPlayer)
 
 	if armorItemNumber ~= nil then
 		equipArmorWithItemNumber(luaPlayer, armorItemNumber)
@@ -122,54 +119,51 @@ end
 function dyeArmorFromPlayer(luaPlayer)
 	Logging.sasLog()
 
-	armorInfo = getArmorInfo(luaPlayer)
+	local armorInfo = getArmorInfo(luaPlayer)
 	if armorInfo == nil then
 		return
 	end	
 
 	Logging.sasLog(
 		"Dyeing armor "
-		.. armorInfo.primaryKey 
-		.. "/" 
-		.. armorInfo.secondaryKey
+		.. StringUtils.toString(armorInfo.keys)
 		.. " to " 
 		.. StringUtils.toString(luaPlayer.color)
 	)
 	
 	-- Record color
-	global.armorColors[armorInfo.primaryKey] = luaPlayer.color
-	global.armorColorsBackup[armorInfo.secondaryKey] = luaPlayer.color	
+	for _, key in ipairs(armorInfo.keys) do
+    global.armorColors[key] = luaPlayer.color
+	end
 end
 
 function dyePlayerFromArmor(luaPlayer)
 	Logging.sasLog()
 
 	-- Get the currently worn armor
-	armorInfo = getArmorInfo(luaPlayer)
+	local armorInfo = getArmorInfo(luaPlayer)
 	if armorInfo == nil then
 		return
 	end
 
-	-- Try primary key
-	colorNew = global.armorColors[armorInfo.primaryKey]
-	
-	-- Try secondary key
-	if colorNew == nil then 
-		Logging.sasLog("Could not find next armor's key " .. armorInfo.primaryKey .. " in armorColors.")
-		colorNew = global.armorColorsBackup[armorInfo.secondaryKey]
+
+	-- Try all keys until a color is found
+	for i, key in ipairs(armorInfo.keys) do
+		local colorNew = global.armorColors[key]
+		if colorNew ~= nil then
+			Logging.sasLog("Found color with key " .. i)
+
+    	-- Apply Color
+			luaPlayer.color = colorNew
+
+			-- Apply Jetpack tint fix
+			tryCatchPrint(jetpackTintFix, luaPlayer)
+
+			return
+		end
 	end
 
-	-- Bail if not found
-	if colorNew == nil then
-		Logging.sasLog("Could not find next armor's backup key " .. armorInfo.secondaryKey .. " in armorColorsBackup. Bailing.")
-		return
-	end
-
-	-- Apply Color
-	luaPlayer.color = colorNew
-
-	-- Apply Jetpack tint fix
-	tryCatchPrint(jetpackTintFix, luaPlayer)
+	Logging.sasLog("Could not find armor's color, Bailing.")
 end
 
 
@@ -181,7 +175,7 @@ end
 function getArmorInfo(luaPlayer)
 	Logging.sasLog()
 
-	luaItemStackWornArmor = luaPlayer.get_inventory(defines.inventory.character_armor)[1]
+	local luaItemStackWornArmor = luaPlayer.get_inventory(defines.inventory.character_armor)[1]
 	if not luaItemStackWornArmor.is_armor then
 		Logging.sasLog("Not wearing armor")
 		return nil
@@ -193,32 +187,31 @@ function getArmorInfo(luaPlayer)
 	However, some mods that teleport players like our beloved SE and Jetpack will destroy and re-create the player, which has the 
 	unfortunate side effect of creating new item numbers for that player's armors.
 	
-	Given that, we make a secondary key by hashing the armor's name plus its grid contents.
-
-	This is a much fuzzier match and will cause collisions if armor types and grids are exactly the same. 
-	For example, if you and another player both have a power armor mk2 with nothing but jetpacks and theirs is red and yours is blue,
-	they will both get the same hash.
-
-	These collisions are usually not the worst user experience since we don't usually care about dying armors with no grid or keeping armors
-	with the exact same grid visually distinct, but it can get confusing.
-
-	TODO: I'm considering making the fuzzy-match table somehow be based on the player?
-	Perhaps have a personal secondary table that uses the player name/id, and a third that's global? 
-	I'll have to think about it, but for now this is Good Enough.
+	So, we do 2 more increasingly fuzzy matches on 
 
 	--]]
 
+	-- key1 is just the item_number - guaranteed to be unique, but not guaranteed to be permanent.
+	local key1 = luaItemStackWornArmor.item_number
+
+	-- key2 is a hash of the player's name, the armor name and its grid (if it has any)
+	local hashInput = luaPlayer.name .. luaItemStackWornArmor.name
+	if luaItemStackWornArmor.grid ~= nil then
+		hashInput = hashInput .. StringUtils.toString(luaItemStackWornArmor.grid.get_contents())
+	end
+	local key2 = StringUtils.hash(hashInput)
+
+	-- key3 is a hash of the armor name and its grid (if it has any)
 	hashInput = luaItemStackWornArmor.name
 	if luaItemStackWornArmor.grid ~= nil then
 		hashInput = hashInput .. StringUtils.toString(luaItemStackWornArmor.grid.get_contents())
 	end
-	armorHash = StringUtils.hash(hashInput)
+	local key3 = StringUtils.hash(hashInput)	
 
 	-- Return a table
-	ret = {
+	local ret = {
 		name = luaItemStackWornArmor.name,
-		primaryKey = luaItemStackWornArmor.item_number,
-		secondaryKey = armorHash
+		keys = { key1, key2, key3 }
 	}
 
 	-- Log it
@@ -227,18 +220,17 @@ function getArmorInfo(luaPlayer)
 	return ret
 end
 
--- TODO: Test for no armor in inventory and for no curently equipped armor
 function getNextArmorItemNumber(luaPlayer) 
 	Logging.sasLog()
-	luaItemStackWornArmor = luaPlayer.get_inventory(defines.inventory.character_armor)[1]
-	luaInventory = luaPlayer.get_main_inventory()
-	freeSlots = luaInventory.count_empty_stacks()
+	local luaItemStackWornArmor = luaPlayer.get_inventory(defines.inventory.character_armor)[1]
+	local luaInventory = luaPlayer.get_main_inventory()
+	local freeSlots = luaInventory.count_empty_stacks()
 
-	armorItemNumbers = {}
+	local armorItemNumbers = {}
 
 	-- Get the current armor info
-	wornArmorItemNumber = 0
-	currentInventorySizeBonus = 0
+	local wornArmorItemNumber = 0
+	local currentInventorySizeBonus = 0
 	if luaItemStackWornArmor.is_armor then
 		wornArmorItemNumber = luaItemStackWornArmor.item_number
 		currentInventorySizeBonus = luaItemStackWornArmor.prototype.inventory_size_bonus
@@ -247,11 +239,11 @@ function getNextArmorItemNumber(luaPlayer)
 	-- Find all armors in inventory that wouldnt cause you to drop items if they were equipped
 	-- TODO: Refactor this to calculate a minimum number of free slots
 	for i=1, #luaInventory do
-		luaItemStack = luaInventory[i]  
+		local luaItemStack = luaInventory[i]  
 		if luaItemStack.valid_for_read then 
 			if luaItemStack.is_armor then
 				-- If equipping this armor would cause the player to drop items, don't consider it.
-				inventorySizeBonusChange = luaItemStack.prototype.inventory_size_bonus - currentInventorySizeBonus
+				local inventorySizeBonusChange = luaItemStack.prototype.inventory_size_bonus - currentInventorySizeBonus
 				if freeSlots + inventorySizeBonusChange >= 0 then
 					table.insert(armorItemNumbers, luaItemStack.item_number)
 				end
@@ -281,11 +273,11 @@ end
 function equipArmorWithItemNumber(luaPlayer, armorItemNumber) 
 	Logging.sasLog()
 
-	mainInventory = luaPlayer.get_main_inventory()
+	local mainInventory = luaPlayer.get_main_inventory()
 
 	--Get the armors
-	luaItemStackWornArmor = luaPlayer.get_inventory(defines.inventory.character_armor)[1]
-	luaItemStackNewArmor = findArmorByItemNumber(mainInventory, armorItemNumber)
+	local luaItemStackWornArmor = luaPlayer.get_inventory(defines.inventory.character_armor)[1]
+	local luaItemStackNewArmor = findArmorByItemNumber(mainInventory, armorItemNumber)
 
 	Logging.sasLog("Worn armor: " .. StringUtils.toString(luaItemStackWornArmor))
 	Logging.sasLog("New armor: " .. StringUtils.toString(luaItemStackNewArmor))
@@ -311,7 +303,7 @@ function equipArmorWithItemNumber(luaPlayer, armorItemNumber)
 	end
 
 
-	putWornArmorHere = mainInventory.find_empty_stack(luaItemStackWornArmor.name)
+	local putWornArmorHere = mainInventory.find_empty_stack(luaItemStackWornArmor.name)
 
 	-- Bail if full
 	if putWornArmorHere == nil then
@@ -344,7 +336,7 @@ end
 function findArmorByItemNumber(luaInventory, armorItemNumber)
 	Logging.sasLog()
 	for i=1, #luaInventory do
-		luaItemStack = luaInventory[i]  
+		local luaItemStack = luaInventory[i]  
 		if luaItemStack.is_armor and luaItemStack.item_number == armorItemNumber then
 			return luaItemStack
 		end
