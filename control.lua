@@ -233,7 +233,8 @@ function getNextArmorItemNumber(luaPlayer)
 	local currentInventorySizeBonus = 0
 	if luaItemStackWornArmor.is_armor then
 		wornArmorItemNumber = luaItemStackWornArmor.item_number
-		currentInventorySizeBonus = luaItemStackWornArmor.prototype.inventory_size_bonus
+		local currentArmorQuality = luaItemStackWornArmor.quality
+		currentInventorySizeBonus = luaItemStackWornArmor.prototype.get_inventory_size_bonus(currentArmorQuality)
 	end
 
 	-- Find all armors in inventory that wouldnt cause you to drop items if they were equipped
@@ -243,7 +244,8 @@ function getNextArmorItemNumber(luaPlayer)
 		if luaItemStack.valid_for_read then 
 			if luaItemStack.is_armor then
 				-- If equipping this armor would cause the player to drop items, don't consider it.
-				local inventorySizeBonusChange = luaItemStack.prototype.inventory_size_bonus - currentInventorySizeBonus
+				local newInventorySizeBonus = luaItemStack.prototype.get_inventory_size_bonus(luaItemStack.quality)
+				local inventorySizeBonusChange = newInventorySizeBonus - currentInventorySizeBonus
 				if freeSlots + inventorySizeBonusChange >= 0 then
 					table.insert(armorItemNumbers, luaItemStack.item_number)
 				end
