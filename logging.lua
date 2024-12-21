@@ -13,9 +13,10 @@ factorio doesn't recognize changes to info.json unless you re-launch the app.
 --]]
 function Logging.sasLog(message)
 
-  -- If DEBUG_BUILD_TIME hasn't been set then this is likely an install from the mod finder
-  -- Don't log anything to keep the log from filling up with debug messages
-  if Logging.debugBuildTime == "DEBUG_BUILD_TIME" then
+  -- debugBuildTime gets set to a date time by my deploy script. If it hasn't been set, 
+  -- Don't log anything to keep the log from filling up with debug messages for live users.
+  if not Logging.debugBuildTime.find(Logging.debugBuildTime, ":") then
+  	log("bailing, Logging.debugBuildTime: " .. Logging.debugBuildTime)
     return
   end
 
@@ -23,7 +24,7 @@ function Logging.sasLog(message)
 	local debugInfo = debug.getinfo(2, "Sln") or {}
 
 	local header = "🛡️  Deployed " 
-		.. (Logging.debugBuildTime or "[DEBUG_BUILD_TIME nil]") 
+		.. (Logging.debugBuildTime or "[debugBuildTime nil]") 
 		.. " " 
 		.. (debugInfo.source or "[source file nil]") 
 		.. " " 
