@@ -2,7 +2,7 @@
 Version: 0.1.0
   Features:
     - Mod is working!
-  
+      
   Known issues:
     - The Equip Next Armor key is now set to backslash (the "\" key) at first launch. This can be set under Settings -> Controls -> Mods
     - Under Settings -> Controls -> Mods, an error message "Unknown key: controls.scootys-armor-swap" is displayed
@@ -75,5 +75,11 @@ Version: 1.4.3
 
   Features:
     -- Better "fuzzy matching" of armors. This should improve interactions with mods that destroy and re-create armors (namely, Jetpack). Thanks to user guyns for reporting this.
+
+--------------------------------------------------------------------------------------------------- 
+Version: 2.1
+
+  Features:
+    -- Updated to work with Space Age
 
 --------------------------------------------------------------------------------------------------- 
