@@ -19,7 +19,7 @@ function on_init(event)
 	tryCatchPrint(
 		function()
 			Logging.sasLog("⚡️ on_init")
-			global.armorColors = {}
+			storage.armorColors = {}
 		end
 	)
 end
@@ -42,7 +42,7 @@ function on_load(event)
 	tryCatchPrint(
 		function()
 			Logging.sasLog("⚡️ on_load")
-			Logging.sasLog("global.armorColors: " .. tablelength(global.armorColors) .. " entries")
+			Logging.sasLog("storage.armorColors: " .. tablelength(storage.armorColors) .. " entries")
 		end
 	)
 end
@@ -73,7 +73,7 @@ function onKeyPressHandlerClearCacheHandler(event)
 	tryCatchPrint(
 		function()
 			Logging.sasLog("⚡️ onKeyPressHandlerClearCacheHandler")
-			global.armorColors = {}
+			storage.armorColors = {}
 			Logging.pLog(getLuaPlayerFromEvent(event), "All Armors have been un-dyed")
 		end,
 		event
@@ -133,7 +133,7 @@ function dyeArmorFromPlayer(luaPlayer)
 	
 	-- Record color
 	for _, key in ipairs(armorInfo.keys) do
-    global.armorColors[key] = luaPlayer.color
+    storage.armorColors[key] = luaPlayer.color
 	end
 end
 
@@ -149,7 +149,7 @@ function dyePlayerFromArmor(luaPlayer)
 
 	-- Try all keys until a color is found
 	for i, key in ipairs(armorInfo.keys) do
-		local colorNew = global.armorColors[key]
+		local colorNew = storage.armorColors[key]
 		if colorNew ~= nil then
 			Logging.sasLog("Found color with key " .. i)
 
@@ -233,7 +233,8 @@ function getNextArmorItemNumber(luaPlayer)
 	local currentInventorySizeBonus = 0
 	if luaItemStackWornArmor.is_armor then
 		wornArmorItemNumber = luaItemStackWornArmor.item_number
-		currentInventorySizeBonus = luaItemStackWornArmor.prototype.inventory_size_bonus
+		local currentArmorQuality = luaItemStackWornArmor.quality
+		currentInventorySizeBonus = luaItemStackWornArmor.prototype.get_inventory_size_bonus(currentArmorQuality)
 	end
 
 	-- Find all armors in inventory that wouldnt cause you to drop items if they were equipped
@@ -243,7 +244,8 @@ function getNextArmorItemNumber(luaPlayer)
 		if luaItemStack.valid_for_read then 
 			if luaItemStack.is_armor then
 				-- If equipping this armor would cause the player to drop items, don't consider it.
-				local inventorySizeBonusChange = luaItemStack.prototype.inventory_size_bonus - currentInventorySizeBonus
+				local newInventorySizeBonus = luaItemStack.prototype.get_inventory_size_bonus(luaItemStack.quality)
+				local inventorySizeBonusChange = newInventorySizeBonus - currentInventorySizeBonus
 				if freeSlots + inventorySizeBonusChange >= 0 then
 					table.insert(armorItemNumbers, luaItemStack.item_number)
 				end
@@ -434,6 +436,6 @@ local p_armor = player.get_inventory(5)[1].grid
 
 player.insert{name="iron-plate", count = 5000}
 
-player.print(serpent.block(global) )
+player.print(serpent.block(storage) )
 
 ]]
